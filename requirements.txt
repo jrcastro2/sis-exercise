@@ -1,0 +1,13 @@
+Django==4.2.7
+psycopg2-binary==2.9.7
+elasticsearch-dsl==8.9.0
+django-elasticsearch-dsl==8.0
+django-elasticsearch-dsl-drf==0.22.5
+django_extensions==3.2.3
+djangorestframework==3.14.0
+django-filter==23.3
+Markdown==3.5.1
+
+# Local development
+ipython
+ipdb
