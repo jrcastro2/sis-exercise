@@ -148,3 +148,14 @@ ELASTICSEARCH_DSL = {
         "hosts": ["http://elasticsearch:9200"],
     },
 }
+
+INSPIRE_LITERATURE_API_URL = "https://inspirehep.net/api/literature"
+
+CELERY_BEAT_SCHEDULE = {
+    'fetch_inspirehep_papers': {
+        'task': 'api.tasks.fetch_inspirehep_papers',
+        'schedule': 24*60*60,  # every 24 hours
+    },
+}
+
+CELERY_BROKER_URL = 'redis://redis:6379/0'

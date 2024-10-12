@@ -7,6 +7,9 @@ django_extensions==3.2.3
 djangorestframework==3.14.0
 django-filter==23.3
 Markdown==3.5.1
+celery==5.4.0
+requests==2.32.3
+redis==4.3.4
 
 # Local development
 ipython

@@ -33,3 +33,6 @@ migrations:
 
 search-index-rebuild:
 	docker exec -it django_app python manage.py search_index --rebuild
+
+worker:
+	docker exec -it django_app celery -A django_app worker --loglevel=info

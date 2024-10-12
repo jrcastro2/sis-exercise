@@ -21,6 +21,7 @@ services:
       - db
       - elasticsearch
       - django-migrations
+      - redis
 
   # Apply Django migrations
   django-migrations:
@@ -63,6 +64,23 @@ services:
       - 9200:9200
     volumes:
       - elasticsearch_data:/usr/share/elasticsearch/data
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+
+  celery_worker_beat:
+    image: django_app:latest
+    container_name: celery_worker
+    command: celery -A sis_exercise worker --beat --loglevel=info 
+    depends_on:
+      - redis
+      - django_app
+    volumes:
+      - "./app:/app"
+    environment:
+      - DJANGO_SETTINGS_MODULE=sis_exercise.settings 
 
 volumes:
   elasticsearch_data:

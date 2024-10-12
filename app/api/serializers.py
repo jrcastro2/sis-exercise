@@ -1,13 +1,12 @@
 from rest_framework import serializers
 
-from api.models import Literature
-
 
 class LiteratureSerializer(serializers.Serializer):
 
     title = serializers.CharField()
     abstract = serializers.CharField()
-    publication_date = serializers.DateField(read_only=True)
+    publication_date = serializers.DateField()
+    arxiv_id = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         fields = (
@@ -15,3 +14,4 @@ class LiteratureSerializer(serializers.Serializer):
             "abstract",
             "publication_date",
         )
+ 
