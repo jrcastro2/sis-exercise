@@ -1,3 +1,4 @@
+from sis_exercise.views import ElasticSearchAPIView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -8,6 +9,7 @@ from django_elasticsearch_dsl_drf.filter_backends import (
     DefaultOrderingFilterBackend,
     SearchFilterBackend,
 )
+from elasticsearch_dsl import Q
 
 from api.serializers import LiteratureSerializer
 from api.documents import LiteratureDocument
@@ -32,3 +34,14 @@ class LiteratureDocumentViewSet(DocumentViewSet):
         "title": "title.raw",
         "publication_date": "publication_date",
     }
+
+class LiteratureSearchView(ElasticSearchAPIView):
+    serializer_class = LiteratureSerializer
+    document_class = LiteratureDocument
+
+    def elasticsearch_query_expression(self, query):
+        """
+        Define the search query that searches for the query string
+        in the 'title' and 'abstract' fields of the document.
+        """
+        return Q("multi_match", query=query, fields=['title', 'abstract'])
