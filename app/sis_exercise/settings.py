@@ -159,3 +159,7 @@ CELERY_BEAT_SCHEDULE = {
 }
 
 CELERY_BROKER_URL = 'redis://redis:6379/0'
+
+OPENAI_API_KEY = "your-api-key"
+
+USE_OPENAI = False
