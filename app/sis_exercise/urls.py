@@ -18,7 +18,7 @@ from django.urls import include
 from django.urls import path
 
 from rest_framework.routers import DefaultRouter
-from api.views import LiteratureDocumentViewSet, LiteratureSearchView
+from api.views import CommonUserQueriesView, LiteratureDocumentViewSet, LiteratureSearchView, OpenAIMetricsView
 from sis_exercise.views import IndexRedirectView
 
 router = DefaultRouter()
@@ -27,4 +27,6 @@ router.register('api/literature/search', LiteratureDocumentViewSet, basename='ap
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('api/search/', LiteratureSearchView.as_view(), name='literature-search'),
+    path('api/metrics/user-queries/', CommonUserQueriesView.as_view(), name='user-queries'),
+    path('api/metrics/openai-performance/', OpenAIMetricsView.as_view(), name='openai-performance'),
 ] + router.urls

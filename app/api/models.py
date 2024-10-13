@@ -33,3 +33,14 @@ class Literature(models.Model):
             succeeded = cls.objects.bulk_create(valid_objects)
         
         return succeeded, errors
+    
+class ApiMetricsEntry(models.Model):
+    QUERY_TYPE_CHOICES = [
+        ('user', 'User Query'),
+        ('openai', 'OpenAI API'),
+    ]
+
+    query = models.TextField()
+    response_time = models.FloatField(null=True, blank=True)
+    query_type = models.CharField(max_length=10, choices=QUERY_TYPE_CHOICES)
+    timestamp = models.DateTimeField(auto_now_add=True)

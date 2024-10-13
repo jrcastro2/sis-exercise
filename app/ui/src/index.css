@@ -12,6 +12,12 @@ code {
     monospace;
 }
 
+.base-app {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto
+}
+
 .center {
   width: 100%;
   text-align: center;
@@ -19,4 +25,24 @@ code {
 
 .margin-top-20 {
   margin-top: 20px;
+}
+
+.display-flex {
+  display: flex;
+}
+
+.width-33-p {
+  width: 33%;
+}
+
+.padding-5 {
+  margin: 5px;
+}
+
+.logo {
+  float: left;
+  color: #fff;
+  font-size: 20px;
+  margin-right: 20px;
+  cursor: pointer;
 }

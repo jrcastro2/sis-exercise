@@ -1,3 +1,5 @@
+import time
+from api.services import ApiMetricsService
 from sis_exercise.views import ElasticSearchAPIView
 from rest_framework import status
 from rest_framework.response import Response
@@ -19,6 +21,7 @@ from django.conf import settings
 import requests
 import logging
 from requests.exceptions import RequestException
+from rest_framework.views import APIView
 
 logger = logging.getLogger(__name__)
 class LiteratureDocumentViewSet(DocumentViewSet):
@@ -57,6 +60,8 @@ class LiteratureSearchView(ElasticSearchAPIView):
         Extend the GET method to include summarization after retrieving search results.
         """
         try:
+            query = request.query_params.get('query', '')
+            ApiMetricsService.log_user_query(query)
             response = super().get(request, *args, **kwargs)
         except (TransportError, ConnectionError, NotFoundError) as e:
             logger.error(f"Elasticsearch query error: {str(e)}")
@@ -79,7 +84,12 @@ class LiteratureSearchView(ElasticSearchAPIView):
                 titles_and_abstracts.append(f"Title: {title}\nAbstract: {abstract}")
                 text_to_summarize = "\n\n".join(titles_and_abstracts)
             try:
+                start_time = time.time()
                 summary = self.summarize_text(text_to_summarize)
+                end_time = time.time()
+                response_time = end_time - start_time
+                ApiMetricsService.log_openai_metrics(text_to_summarize, response_time)
+
             except RequestException as e:
                 logger.error(f"Error communicating with the OpenAI API: {str(e)}")
                 return Response(
@@ -137,3 +147,14 @@ class LiteratureSearchView(ElasticSearchAPIView):
 
         # Fallback to a mock summary
         return "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+
+
+class CommonUserQueriesView(APIView):
+    def get(self, request):
+        common_queries = ApiMetricsService.get_most_common_user_queries()
+        return Response(common_queries, status=status.HTTP_200_OK)
+
+class OpenAIMetricsView(APIView):
+    def get(self, request):
+        performance_metrics = ApiMetricsService.get_openai_performance_metrics()
+        return Response(performance_metrics, status=status.HTTP_200_OK)
