@@ -50,7 +50,7 @@ class LiteratureSearchView(ElasticSearchAPIView):
         Define the search query that searches for the query string
         in the 'title' and 'abstract' fields of the document.
         """
-        return Q("multi_match", query=query, fields=["title", "abstract"])
+        return Q("query_string", query=query, fields=["title", "abstract"])
 
     def get(self, request, *args, **kwargs):
         """
@@ -71,7 +71,7 @@ class LiteratureSearchView(ElasticSearchAPIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-        if response.status_code == 200:
+        if response.status_code == 200 and response.data:
             titles_and_abstracts = []
             for item in response.data:
                 title = item.get("title", "")

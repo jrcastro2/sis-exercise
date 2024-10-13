@@ -4,6 +4,7 @@
 
 - Docker
 - Docker-compose
+- Node.js version 20
 
 ## Setup
 
@@ -16,6 +17,17 @@
         # user: admin
         # password: admin
     ```
+
+### Frontend (React)
+
+Please ensure that Node.js version 20 is installed. It’s recommended to use [nvm](https://github.com/nvm-sh/nvm) for managing Node versions.
+Once Node.js is installed, navigate to the ui folder and install the necessary packages to run the application:
+```bash
+cd ui
+npm install
+npm start
+# visit localhost:3000
+```
 
 ## Notes
 
