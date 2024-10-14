@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
-import { Input, Typography, Spin, message, Collapse, Row, Col, Select, Space } from 'antd';
+import { Input, Typography, Spin, message, Collapse, Row, Col, Pagination } from 'antd';
 import { searchLiterature } from '../api/literatureApi';
 
 const { Title, Paragraph } = Typography;
-const { Option } = Select;
 const { Search } = Input;
 
-function App() {
+function SearchPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
   const [limit, setLimit] = useState(10);
+  const [offset, setOffset] = useState(0);
+  const [total, setTotal] = useState(0);
 
-  const handleSearch = async () => {
+  const handleSearch = async (page = 1, pageSize = limit) => {
     if (!query.trim()) {
       message.warning("Please enter a search term.");
       return;
@@ -26,12 +27,16 @@ function App() {
 
     setLoading(true);
     try {
-      const data = await searchLiterature(query, limit);
-      if (!data.results) {
+      const offsetValue = (page - 1) * pageSize;
+      const data = await searchLiterature(query, pageSize, offsetValue);
+      if (data.total === 0) {
         message.warning("No results found for the search term.");
       } else {
         setResults(data.results);
         setSummary(data.summary);
+        setTotal(data.total);
+        setOffset(offsetValue);
+        setLimit(pageSize);
       }
     } catch (error) {
       message.error("There was an error fetching data.");
@@ -48,24 +53,10 @@ function App() {
   }));
 
   return (
-    <div >
+    <div>
       <Row justify="space-between" align="middle">
         <Col>
           <Title level={2}>Literature Search</Title>
-        </Col>
-        <Col>
-          <Space>
-            <span>Number of results:</span>
-            <Select
-              defaultValue={10}
-              value={limit}
-              onChange={(value) => setLimit(value)}
-            >
-              <Option value={10}>10</Option>
-              <Option value={20}>20</Option>
-              <Option value={50}>50</Option>
-            </Select>
-          </Space>
         </Col>
       </Row>
 
@@ -74,7 +65,7 @@ function App() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         enterButton
-        onSearch={handleSearch}
+        onSearch={() => handleSearch(1)}
         loading={loading}
       />
 
@@ -82,19 +73,30 @@ function App() {
 
       {!loading && summary && (
         <>
-          <Title level={4} >Summary</Title>
+          <Title level={4}>Summary</Title>
           <Paragraph>{summary}</Paragraph>
         </>
       )}
 
       {!loading && results.length > 0 && (
         <>
-          <Title level={4} >Results</Title>
+          <Title level={4}>Results</Title>
           <Collapse items={collapseItems} />
+
+          <Pagination
+            className='justify-center margin-top-20'
+            current={offset / limit + 1}
+            total={total}
+            pageSize={limit}
+            onChange={handleSearch}
+            showSizeChanger
+            pageSizeOptions={['10', '20', '50']}
+            onShowSizeChange={handleSearch}
+          />
         </>
       )}
     </div>
   );
 }
 
-export default App;
+export default SearchPage;

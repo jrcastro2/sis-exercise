@@ -74,6 +74,7 @@ class ElasticSearchAPIView(APIView):
             )
 
         query_data = search_query_serializer.validated_data
+        
         try:
             # Check if the 'query' parameter is provided and not empty
             if query_data.get("query"):
@@ -92,8 +93,17 @@ class ElasticSearchAPIView(APIView):
 
             response = search.execute()
 
+            total_hits = response.hits.total.value
+
             serializer = self.serializer_class(list(response.hits), many=True)
-            return DRFResponse(serializer.data, status=status.HTTP_200_OK)
+
+            return DRFResponse({
+                "results": serializer.data,
+                "total": total_hits,
+                "offset": offset,
+                "limit": limit
+            }, status=status.HTTP_200_OK)
+    
         except Exception as e:
             return DRFResponse(
                 f"Error during fetching data: {str(e)}",

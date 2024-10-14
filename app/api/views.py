@@ -24,6 +24,8 @@ from requests.exceptions import RequestException
 from rest_framework.views import APIView
 
 logger = logging.getLogger(__name__)
+
+
 class LiteratureDocumentViewSet(DocumentViewSet):
     document = LiteratureDocument
     serializer_class = LiteratureSerializer
@@ -53,32 +55,35 @@ class LiteratureSearchView(ElasticSearchAPIView):
         Define the search query that searches for the query string
         in the 'title' and 'abstract' fields of the document.
         """
-        return Q("query_string", query=query, fields=["title", "abstract"])
+        return Q("multi_match", query=query, fields=["title", "abstract"])
 
     def get(self, request, *args, **kwargs):
         """
         Extend the GET method to include summarization after retrieving search results.
         """
         try:
-            query = request.query_params.get('query', '')
+            query = request.query_params.get("query", "")
             ApiMetricsService.log_user_query(query)
             response = super().get(request, *args, **kwargs)
         except (TransportError, ConnectionError, NotFoundError) as e:
             logger.error(f"Elasticsearch query error: {str(e)}")
             return Response(
                 {"error": "Error querying Elasticsearch.", "details": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         except Exception as e:
             logger.error(f"Unexpected error during search: {str(e)}")
             return Response(
                 {"error": "An unexpected error occurred during the search."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
-        if response.status_code == 200 and response.data:
+        if not (200 <= response.status_code < 300):
+            return response
+        
+        results = response.data.get("results", [])
+        if response.status_code == 200 and results:
             titles_and_abstracts = []
-            for item in response.data:
+            for item in results:
                 title = item.get("title", "")
                 abstract = item.get("abstract", "")
                 titles_and_abstracts.append(f"Title: {title}\nAbstract: {abstract}")
@@ -94,15 +99,21 @@ class LiteratureSearchView(ElasticSearchAPIView):
                 logger.error(f"Error communicating with the OpenAI API: {str(e)}")
                 return Response(
                     {"error": "Error communicating with the OpenAI API."},
-                    status=status.HTTP_502_BAD_GATEWAY
+                    status=status.HTTP_502_BAD_GATEWAY,
                 )
             except Exception as e:
                 logger.error(f"Unexpected error during summarization: {str(e)}")
                 return Response(
                     {"error": "An unexpected error occurred during summarization."},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
-            response.data = {"summary": summary, "results": response.data}
+            response.data = {
+                "summary": summary,
+                "results": results,
+                "total": response.data.get("total", 0),
+                "offset": response.data.get("offset", 0),
+                "limit": response.data.get("limit", 10),
+            }
 
         return response
 
@@ -123,13 +134,13 @@ class LiteratureSearchView(ElasticSearchAPIView):
                         "messages": [
                             {
                                 "role": "user",
-                                "content": "Provide a concise summary of the following data:"
+                                "content": "Provide a concise summary of the following data, summarize it in one paragraph:"
                                 + text,
                             }
                         ],
                         "temperature": 0.7,
                     },
-                    timeout=10
+                    timeout=10,
                 )
                 response.raise_for_status()
                 return (
@@ -153,6 +164,7 @@ class CommonUserQueriesView(APIView):
     def get(self, request):
         common_queries = ApiMetricsService.get_most_common_user_queries()
         return Response(common_queries, status=status.HTTP_200_OK)
+
 
 class OpenAIMetricsView(APIView):
     def get(self, request):
