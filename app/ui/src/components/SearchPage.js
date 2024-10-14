@@ -15,11 +15,6 @@ function SearchPage() {
   const [total, setTotal] = useState(0);
 
   const handleSearch = async (page = 1, pageSize = limit) => {
-    if (!query.trim()) {
-      message.warning("Please enter a search term.");
-      return;
-    }
-
     if (loading) {
       message.warning("Please wait for the current search to finish.");
       return;
